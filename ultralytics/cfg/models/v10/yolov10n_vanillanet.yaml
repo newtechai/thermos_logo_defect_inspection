@@ -1,0 +1,32 @@
+
+nc: 3
+
+scales:
+  n: [0.33, 0.25, 1024]
+
+backbone:
+  - [ -1, 1, VanillaStem, [ 32 ] ]
+  - [ -1, 1, VanillaStage, [ 64, 1, True ] ]
+  - [ -1, 1, VanillaStage, [ 128, 2, True ] ]
+  - [ -1, 1, VanillaStage, [ 256, 2, True ] ]
+  - [ -1, 1, VanillaStage, [ 512, 1, True ] ]
+  - [ -1, 1, VanillaSPPF, [ 512, 5 ] ]
+
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 6
+  - [[6, 3], 1, Concat, [1]]                   # 7
+  - [-1, 2, C2f, [256]]                        # 8
+
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]] # 9
+  - [[9, 2], 1, Concat, [1]]                   # 10
+  - [-1, 2, C2f, [128]]                        # 11
+
+  - [-1, 1, Conv, [128, 3, 2]]                 # 12
+  - [[12, 8], 1, Concat, [1]]                  # 13
+  - [-1, 2, C2f, [256]]                        # 14
+
+  - [-1, 1, Conv, [256, 3, 2]]                 # 15
+  - [[15, 5], 1, Concat, [1]]                  # 16
+  - [-1, 2, C2f, [512]]                        # 17
+
+  - [[11, 14, 17], 1, Detect, [nc]]            # 18
